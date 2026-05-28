@@ -2,6 +2,13 @@
 name = "cargo-docserve"
 version = "0.1.0"
 edition = "2024"
+authors = ["Calin P <iamwyvern511@gmail.com>"]
+description = "A minimalist file server for cargo doc"
+repository = "https://github.com/wyvernbw/cargo-docserve"
+readme = "readme.md"
+license = "GPL-3.0-or-later"
+keywords = ["cargo", "docs", "wrapper"]
+categories = ["development-tools::cargo-plugins"]
 
 [dependencies]
 clap = { version = "4.6.1", features = ["cargo", "derive"] }
@@ -9,3 +16,9 @@ clap-cargo = "0.18.3"
 ctrlc = "3.5.2"
 hyper = { version = "1.10.0", features = ["server"] }
 tiny_http = "0.12.0"
+
+[profile.release]
+opt-level = "s"
+strip = true
+panic = "abort"
+codegen-units = 1
