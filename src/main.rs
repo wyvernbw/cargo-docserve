@@ -13,26 +13,30 @@ use tiny_http::{Response, Server};
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error + 'static>>;
 
+/// For more options, see cargo doc help.
 #[derive(clap::Parser)]
+#[command(styles = clap_cargo::style::CLAP_STYLING)]
 struct CliArgs {
     #[arg(short, default_value_t = 8080)]
     port: u16,
-    #[arg(short)]
-    address: Option<IpAddr>,
+    #[arg(short, default_value = "0.0.0.0")]
+    address: IpAddr,
+
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    cargo_doc_args: Vec<String>,
 }
 
 fn main() -> Result<ExitCode> {
     let cli = CliArgs::parse();
-    let args = std::env::args().skip(1).collect::<Vec<_>>();
     let mut docs = Command::new("cargo");
     docs.args(["doc"]);
-    docs.args(&args);
+    docs.args(&cli.cargo_doc_args);
     let mut child = docs.spawn()?;
     let exit_code = child.wait()?.code();
 
     let mut docs = Command::new("cargo");
     docs.args(["doc"]);
-    docs.args(&args);
+    docs.args(&cli.cargo_doc_args);
     docs.stderr(Stdio::piped());
     let mut child = docs.spawn()?;
     let stderr = child.stderr.take().expect("must pipe stderr");
@@ -41,12 +45,7 @@ fn main() -> Result<ExitCode> {
     let project_root = index_path.parent().ok_or("expected dirname")?;
     let docs_root = project_root.parent().ok_or("expected dirname")?;
 
-    let server = Server::http(SocketAddr::new(
-        cli.address
-            .unwrap_or_else(|| IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))),
-        cli.port,
-    ))
-    .unwrap();
+    let server = Server::http(SocketAddr::new(cli.address, cli.port)).unwrap();
     static QUIT: AtomicBool = AtomicBool::new(false);
     let addr = server.server_addr();
     println!("\x1b[1;92mServing docs\x1b[0m at \x1b]8;;http://{addr}\x1b\\{addr}\x1b]8;;\x1b\\");
