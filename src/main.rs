@@ -17,6 +17,8 @@ type Result<T> = core::result::Result<T, Box<dyn std::error::Error + 'static>>;
 #[derive(clap::Parser)]
 #[command(styles = clap_cargo::style::CLAP_STYLING)]
 struct CliArgs {
+    #[arg(hide = true)]
+    docserve: Option<String>,
     #[arg(short, default_value_t = 8080)]
     port: u16,
     #[arg(short, default_value = "0.0.0.0")]
