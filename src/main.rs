@@ -50,6 +50,7 @@ fn main() -> Result<ExitCode> {
     static QUIT: AtomicBool = AtomicBool::new(false);
     let addr = server.server_addr();
     println!("\x1b[1;92mServing docs\x1b[0m at \x1b]8;;http://{addr}\x1b\\{addr}\x1b]8;;\x1b\\");
+    println!("\x1b[37mpress ^C to quit.\x1b[0m");
 
     std::thread::scope(|scope| -> Result<()> {
         let (quit_tx, quit_rx) = std::sync::mpsc::channel();
@@ -70,13 +71,6 @@ fn main() -> Result<ExitCode> {
         for request in server.incoming_requests() {
             scope.spawn(move || {
                 let handler = || -> Result<()> {
-                    println!(
-                        "received request! method: {:?}, url: {:?}, headers: {:?}",
-                        request.method(),
-                        request.url(),
-                        request.headers()
-                    );
-
                     let path = match request.url() {
                         "/" => index_path.as_path(),
                         s => {
@@ -94,10 +88,15 @@ fn main() -> Result<ExitCode> {
                         }
                     };
 
-                    let file = fs::File::open(path)?;
-                    let res = Response::from_file(file);
+                    let file = fs::File::open(path);
+                    match file {
+                        Ok(file) => {
+                            let res = Response::from_file(file);
 
-                    request.respond(res)?;
+                            request.respond(res)?;
+                        }
+                        Err(_) => request.respond(Response::empty(404))?,
+                    }
 
                     Ok(())
                 };
