@@ -66,7 +66,6 @@ fn main() -> Result<ExitCode> {
         });
 
         let index_path = &index_path;
-        let project_root = &project_root;
         let docs_root = &docs_root;
         for request in server.incoming_requests() {
             scope.spawn(move || {
@@ -75,15 +74,7 @@ fn main() -> Result<ExitCode> {
                         "/" => index_path.as_path(),
                         s => {
                             let s = s.trim().trim_prefix("/");
-                            let root = if s.starts_with("fn.")
-                                || s.starts_with("struct.")
-                                || s.starts_with("type.")
-                                || s.starts_with("trait.")
-                            {
-                                project_root
-                            } else {
-                                docs_root
-                            };
+                            let root = docs_root;
                             &root.join(s)
                         }
                     };
@@ -122,3 +113,6 @@ fn get_docs_path(reader: impl BufRead) -> Result<PathBuf> {
     }
     Err("doc path not found".to_string().into())
 }
+
+#[allow(dead_code)]
+enum TestEnum {}
